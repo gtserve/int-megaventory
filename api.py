@@ -7,11 +7,16 @@
 # -------------------------------------------------------------------------------------------------
 
 from requests import post as post_request
-from json import dumps as json_encoder
 from product import Product
+from supplier_client import SupplierClient
+from inventory_location import InventoryLocation
+from tax import Tax
+from discount import Discount
+from sales_order import SalesOrder
 
 
 class API:
+    """A class that acts as an interface and handles the API endpoints."""
 
     def __init__(self, key, base_url):
         self.key = key
@@ -26,7 +31,7 @@ class API:
 
     def perform_action(self, mv_action: str, entity, ext_app: str) -> int:
 
-        # Currently only the Insert action is supported.
+        # Currently only the Insert mvRecordAction is supported.
         if mv_action != "Insert":
             return -1
 
@@ -34,6 +39,16 @@ class API:
         # If the entity is not supported return an error code.
         if isinstance(entity, Product):
             ent_type = "Product"
+        elif isinstance(entity, SupplierClient):
+            ent_type = "SupplierClient"
+        elif isinstance(entity, InventoryLocation):
+            ent_type = "InventoryLocation"
+        elif isinstance(entity, Tax):
+            ent_type = "Tax"
+        elif isinstance(entity, Discount):
+            ent_type = "Discount"
+        elif isinstance(entity, SalesOrder):
+            ent_type = "SalesOrder"
         else:
             return -1
 
@@ -41,9 +56,27 @@ class API:
         url_ext = f"/{ent_type}/{ent_type}Update"
         ent_id_attr = f"{ent_type}ID"
 
-        ent_attr = {}
+        # Depending on the action and the entity type, some attributes have to be ignored.
+        invalid_attr = {}
         if mv_action == "Insert":
-            ent_attr = {a: entity.__dict__[a] for a in entity.__dict__ if a != ent_id_attr}
+            if ent_type != "SalesOrder":
+                invalid_attr = {ent_id_attr}
+            else:
+                invalid_attr = {"SalesOrderId", "SalesOrderΝο", "client", "products", "location"}
+
+        ent_attr = {a: entity.__dict__[a] for a in entity.__dict__ if a not in invalid_attr}
+
+        if ent_type == "SalesOrder":
+            ent_attr["SalesOrderClientId"] = entity.client.get_id()
+            so_details = {}
+            for p, q in entity.products:
+                so_details["SalesOrderRowProductSKU"] = p.get_name()
+                so_details["SalesOrderRowQuantity"] = q
+                so_details["SalesOrderRowShippedQuantity"] = 0
+                so_details["SalesOrderRowUnitPriceWithoutTaxOrDiscount"] = p.ProductSellingPrice
+            ent_attr["SalesOrderDetails"] = so_details
+            if entity.location is not None:
+                ent_attr["SalesOrderInventoryLocationID"] = entity.location.InventoryLocationID
 
         data = {"APIKEY": self.key,
                 mv_str: ent_attr,
@@ -70,8 +103,17 @@ class API:
         print(f"  - error code:  {error_code}")
         print(f"  - entityID:    {entity_id}")
 
+        print(response.json())
+
+        if error_code != 0:
+            print("[API]: Something went wrong with the request!")
+            return -1
+
         # Store the record id that was assigned.
         entity.set_id(entity_id)
+
+        if ent_type == "SalesOrder":
+            entity.SalesOrderNo = int(response.json()[mv_str]["SalesOrderNo"])
 
         # Return the error code of the response message.
         return error_code

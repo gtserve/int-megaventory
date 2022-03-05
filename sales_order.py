@@ -6,24 +6,32 @@
 # date: 04-03-2022
 # -------------------------------------------------------------------------------------------------
 
-from enum import Enum
-from json import dumps as json_encoder
+from supplier_client import SupplierClient
+from inventory_location import InventoryLocation
 
-
-class OrderStatus(Enum):
-    PENDING = 1
-    APPROVED = 2
-    SHIPPED = 3
-    INVOICED = 4
-    CLOSED = 5
+# Type aliases for SalesOrder
+PENDING = "Pending"
+APPROVED = "Approved"
+SHIPPED = "Shipped"
+INVOICED = "Invoiced"
+CLOSED = "Closed"
 
 
 class SalesOrder:
 
-    def __init__(self, order_id: int, no: int, status: OrderStatus) -> None:
-        self.order_id = order_id
-        self.no = no
-        self.status = status
+    def __init__(self, status: str, client: SupplierClient, products: list) -> None:
+        self.SalesOrderId = -1
+        self.SalesOrderNo = -1
+        self.SalesOrderStatus = status
+        self.client = client
+        self.products = products
+        self.location = None
 
-    def to_json_str(self) -> str:
-        return json_encoder(self, default=lambda o: o.__dict__)
+    def get_name(self) -> str:
+        return f"SalesOrder {self.SalesOrderId} no{self.SalesOrderNo}"
+
+    def set_id(self, record_id) -> None:
+        self.SalesOrderId = record_id
+
+    def set_location(self, location: InventoryLocation) -> None:
+        self.location = location
