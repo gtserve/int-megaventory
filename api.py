@@ -62,14 +62,14 @@ class API:
             if ent_type != "SalesOrder":
                 invalid_attr = {ent_id_attr}
             else:
-                invalid_attr = {"SalesOrderId", "SalesOrderΝο", "client", "products", "location"}
+                invalid_attr = {"SalesOrderId", "SalesOrderΝο", "client", "order_list", "location"}
 
         ent_attr = {a: entity.__dict__[a] for a in entity.__dict__ if a not in invalid_attr}
 
         if ent_type == "SalesOrder":
             ent_attr["SalesOrderClientId"] = entity.client.get_id()
             so_details = {}
-            for p, q in entity.products:
+            for p, q in entity.order_list:
                 so_details["SalesOrderRowProductSKU"] = p.get_name()
                 so_details["SalesOrderRowQuantity"] = q
                 so_details["SalesOrderRowShippedQuantity"] = 0
