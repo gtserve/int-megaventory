@@ -8,6 +8,7 @@
 
 
 class Tax:
+    """ A class that represents an mvTax object. """
 
     def __init__(self, name: str, percent: float) -> None:
         self.TaxID = -1
@@ -17,6 +18,9 @@ class Tax:
 
     def get_name(self) -> str:
         return self.TaxName
+
+    def get_id(self) -> int:
+        return self.TaxID
 
     def set_id(self, record_id) -> None:
         self.TaxID = record_id

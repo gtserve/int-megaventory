@@ -5,32 +5,32 @@
 # email: george.tservenis@gmail.com
 # date: 04-03-2022
 # -------------------------------------------------------------------------------------------------
+
 from discount import Discount
 from supplier_client import SupplierClient
 from inventory_location import InventoryLocation
 from tax import Tax
 
 
-# Type aliases for SalesOrder
-PENDING = "Pending"
-APPROVED = "Approved"
-SHIPPED = "Shipped"
-INVOICED = "Invoiced"
-CLOSED = "Closed"
-
-
 class SalesOrder:
+    """ A class that represents an mvSalesOrder object. """
 
     def __init__(self, status: str, client: SupplierClient, order_list: list) -> None:
+        # mvSalesOrder attributes
         self.SalesOrderId = -1
         self.SalesOrderNo = -1
         self.SalesOrderStatus = status
+        # other necessary attributes
         self.client = client
         self.order_list = order_list
         self.location = None
 
     def get_name(self) -> str:
+        """ A mvSalesOrder object doesn't have a name attribute. Return a custom one."""
         return f"SalesOrder {self.SalesOrderId} no{self.SalesOrderNo}"
+
+    def get_id(self) -> int:
+        return self.SalesOrderId
 
     def set_id(self, record_id) -> None:
         self.SalesOrderId = record_id
@@ -39,7 +39,7 @@ class SalesOrder:
         self.location = location
 
     def get_total_value(self, tax: Tax, discount: Discount) -> float:
-        """ Calculate the total selling value of a SalesOrder. """
+        """ Return the total selling value of all products in the order list of a SalesOrder. """
 
         value = 0.00
         for p, q in self.order_list:

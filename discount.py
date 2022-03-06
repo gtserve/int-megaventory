@@ -8,6 +8,7 @@
 
 
 class Discount:
+    """ A class that represents an mvDiscount object. """
 
     def __init__(self, name: str, percent: float) -> None:
         self.DiscountID = -1
@@ -17,6 +18,9 @@ class Discount:
 
     def get_name(self) -> str:
         return self.DiscountName
+
+    def get_id(self) -> int:
+        return self.DiscountID
 
     def set_id(self, record_id) -> None:
         self.DiscountID = record_id

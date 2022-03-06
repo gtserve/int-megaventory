@@ -8,6 +8,7 @@
 
 
 class Product:
+    """ A class that represents an mvProduct object. """
 
     def __init__(self, sku: str, description: str) -> None:
         self.ProductID = -1
@@ -18,6 +19,9 @@ class Product:
 
     def get_name(self) -> str:
         return self.ProductSKU
+
+    def get_id(self) -> int:
+        return self.ProductID
 
     def set_id(self, record_id) -> None:
         self.ProductID = record_id

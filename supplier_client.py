@@ -6,12 +6,9 @@
 # date: 04-03-2022
 # -------------------------------------------------------------------------------------------------
 
-SUPPLIER = "Supplier"
-CLIENT = "Client"
-SnC = "Supplier and Client"
-
 
 class SupplierClient:
+    """ A class that represents an mvSupplierClient object. """
 
     def __init__(self, name: str, sc_type: str) -> None:
         self.SupplierClientID = -1

@@ -5,15 +5,19 @@
 # email: george.tservenis@gmail.com
 # date: 04-03-2022
 # -------------------------------------------------------------------------------------------------
+# Description:
+#   A simple application that uses the API class and the other entities to send/insert some dummy
+#   instances.
+# -------------------------------------------------------------------------------------------------
 
 from api import API
 from product import Product
+from supplier_client import SupplierClient
 from inventory_location import InventoryLocation
 from tax import Tax
 from discount import Discount
+from sales_order import SalesOrder
 
-import supplier_client as sc
-import sales_order as so
 
 # Global info for requests
 api_key = "3974d8451ecede7d@m128220"
@@ -21,7 +25,6 @@ base_url = "https://api.megaventory.com/v2017a"
 
 
 if __name__ == '__main__':
-
     # Create an API object.
     api = API(api_key, base_url)
 
@@ -30,55 +33,51 @@ if __name__ == '__main__':
     product.ProductSellingPrice = 99.99
     product.ProductPurchasePrice = 44.99
 
-    # Insert Product and print its attributes.
+    # Send (Insert) Product and print its attributes.
     api.perform_action("Insert", product, "")
     # print(product.__dict__)
 
     # Create a dummy Client.
-    c = sc.SupplierClient("babis", sc.CLIENT)
-    c.SupplierClientEmail = "babis@exampletest.com"
-    c.SupplierClientShippingAddress1 = "Example 8, Athens"
-    c.SupplierClientPhone1 = "1235698967"
+    client = SupplierClient("babis", "Client")
+    client.SupplierClientEmail = "babis@exampletest.com"
+    client.SupplierClientShippingAddress1 = "Example 8, Athens"
+    client.SupplierClientPhone1 = "1235698967"
 
-    # Insert Client and print its attributes.
-    api.perform_action("Insert", c, "")
+    # Send (Insert) Client and print its attributes.
+    api.perform_action("Insert", client, "")
     # print(c.__dict__)
 
-    print("\nINVENTORY_LOCATION:")
     # Create a dummy Inventory Location.
-    il = InventoryLocation("LOC5", "Location_5")
-    il.InventoryLocationAddress = "Ekei 31, Athens"
+    inv_location = InventoryLocation("Test", "Test Project Location")
+    inv_location.InventoryLocationAddress = "Example 20, Athens"
 
-    # Insert Inventory Location and print its attributes.
-    # api.perform_action("Insert", il, "")
+    # Send (Insert) Inventory Location and print its attributes.
+    api.perform_action("Insert", inv_location, "")
     # print(il.__dict__)
 
-    print("\nTAX:")
     # Create a dummy Tax
-    t = Tax("Random_tax1", 24)
-    t.TaxDescription = "A tax description"
+    tax = Tax("VAT", 24)
+    tax.TaxDescription = "VAT GR"
 
-    # Insert Tax and print its attributes.
-    # api.perform_action("Insert", t, "")
+    # Send (Insert) Tax and print its attributes.
+    api.perform_action("Insert", tax, "")
     # print(t.__dict__)
 
-    print("\nDISCOUNT:")
     # Create a dummy Discount
-    d = Discount("Random_discount1", 50)
-    d.TaxDescription = "A discount description"
+    discount = Discount("Loyalty", 50)
+    discount.TaxDescription = "Loyalty Customer Discount"
 
-    # Insert Tax and print its attributes.
-    # api.perform_action("Insert", d, "")
+    # Send (Insert) Tax and print its attributes.
+    api.perform_action("Insert", discount, "")
     # print(d.__dict__)
 
-    print("\nSALES_ORDER:")
     # Create a dummy SalesOrder
-    products = [(product, 12)]
-    so = so.SalesOrder("Verified", c, products)
-    so.set_location(il)
+    order_list = [(product, 12)]
+    sales_order = SalesOrder("Verified", client, order_list)
+    sales_order.set_location(inv_location)
 
-    # Insert SalesOrder and print its attributes.
-    # api.perform_action("Insert", so, "")
+    # Send (Insert) SalesOrder and print its attributes.
+    api.perform_action("Insert", sales_order, "")
     # print(so.__dict__)
 
-    print("Total Value: ", so.get_total_value(t, d))
+    print("Total Value: ", sales_order.get_total_value(tax, discount))

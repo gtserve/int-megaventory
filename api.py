@@ -21,7 +21,7 @@ class API:
     def __init__(self, key, base_url):
         self.key = key
         self.base_url = base_url
-        self.headers = {"Content-Type": "application/json"}
+        self.headers = {"Content-Type": "application/json"}     # Always ask for json.
 
     def key_verify(self) -> int:
         data = {"APIKEY": self.key}
@@ -29,14 +29,18 @@ class API:
                                 headers=self.headers, json=data)
         return int(response.json()["ResponseStatus"]["ErrorCode"])
 
-    def perform_action(self, mv_action: str, entity, ext_app: str) -> int:
+    def perform_action(self, mv_action: str, entity: object, ext_app: str) -> int:
+        """ A general method for handling all mvRecordActions regardless of the entity type. """
+
+        if (mv_action is None) or (entity is None):
+            return -1
 
         # Currently only the Insert mvRecordAction is supported.
         if mv_action != "Insert":
             return -1
 
         # Find out what kind of entity is the action to be performed with.
-        # If the entity is not supported return an error code.
+        # If the entity type is not supported return with an error code.
         if isinstance(entity, Product):
             ent_type = "Product"
         elif isinstance(entity, SupplierClient):
@@ -57,15 +61,16 @@ class API:
         ent_id_attr = f"{ent_type}ID"
 
         # Depending on the action and the entity type, some attributes have to be ignored.
-        invalid_attr = {}
+        ignore_attr = {}
         if mv_action == "Insert":
             if ent_type != "SalesOrder":
-                invalid_attr = {ent_id_attr}
+                ignore_attr = {ent_id_attr}
             else:
-                invalid_attr = {"SalesOrderId", "SalesOrderΝο", "client", "order_list", "location"}
+                ignore_attr = {"SalesOrderId", "SalesOrderΝο", "client", "order_list", "location"}
 
-        ent_attr = {a: entity.__dict__[a] for a in entity.__dict__ if a not in invalid_attr}
+        ent_attr = {a: entity.__dict__[a] for a in entity.__dict__ if a not in ignore_attr}
 
+        # If entity is a SalesOrder then some extra steps are required for ProductDetails.
         if ent_type == "SalesOrder":
             ent_attr["SalesOrderClientId"] = entity.client.get_id()
             so_details = {}
@@ -76,6 +81,7 @@ class API:
                 so_details["SalesOrderRowUnitPriceWithoutTaxOrDiscount"] = p.ProductSellingPrice
             ent_attr["SalesOrderDetails"] = so_details
             if entity.location is not None:
+                # Add location ID if SalesOrder has one.
                 ent_attr["SalesOrderInventoryLocationID"] = entity.location.InventoryLocationID
 
         data = {"APIKEY": self.key,
@@ -87,23 +93,23 @@ class API:
             data["mvInsertUpdateDeleteSourceApplication"] = ext_app
 
         # Print useful request info for debugging.
-        print("Request:")
-        print(f"  - action:      {mv_action}")
-        print(f"  - entity type: {ent_type}")
-        print(f"  - entity name: \"{entity.get_name()}\"")
-        print(f"  - request url: \"{self.base_url}{url_ext}\"")
+        # print("Request:")
+        # print(f"  - action:      {mv_action}")
+        # print(f"  - entity type: {ent_type}")
+        # print(f"  - entity name: \"{entity.get_name()}\"")
+        # print(f"  - request url: \"{self.base_url}{url_ext}\"")
 
         response = post_request(f"{self.base_url}{url_ext}", headers=self.headers, json=data)
         entity_id = int(response.json()["entityID"])
         error_code = int(response.json()["ResponseStatus"]["ErrorCode"])
 
         # Print useful response info for debugging.
-        print("\nResponse:")
-        print(f"  - status code: {response.status_code}")
-        print(f"  - error code:  {error_code}")
-        print(f"  - entityID:    {entity_id}")
+        # print("\nResponse:")
+        # print(f"  - status code: {response.status_code}")
+        # print(f"  - error code:  {error_code}")
+        # print(f"  - entityID:    {entity_id}")
 
-        print(response.json())
+        # print(response.json())
 
         if error_code != 0:
             print("[API]: Something went wrong with the request!")
